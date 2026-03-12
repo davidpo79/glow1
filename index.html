@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Willow Glow — Strategy Tracker</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
+  <style>* { box-sizing: border-box; } body { margin: 0; padding: 0; }</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <script type="text/babel">
+
+const STORAGE_KEY = "willow-glow-strategy-v4";
+
+const initialData = {
+  phases: [
+    {
+      id: "phase1",
+      title: "שלב 1 — ימים 1-30",
+      subtitle: "סתום את הדלי — תשתית",
+      color: "#2E75B6",
+      categories: [
+        {
+          name: "🔥 שיפור Show Rate + מערכת Prepay",
+          tasks: [
+            { id: "1a", text: "בניית דף תשלום $20 דמי תיעדוף ב-GHL", detail: "יש לבנות דף תשלום ייעודי במערכת GoHighLevel עם חיבור ל-Stripe. הדף יציג: \"הטיפול שלנו עולה $99, אבל כשאת מאשרת את התור עם תשלום מוקדם של $20 את מקבלת מחיר VIP של $79 — חיסכון של $20\". הדף צריך לכלול מדיניות ברורה: דמי תיעדוף לא חוזרים, אפשר לשנות תאריך עד 24 שעות מראש בחינם. עיצוב נקי, לוגו של הספא, ותמונות מקצועיות.", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "1b", text: "בניית סדרת 5 SMS תזכורת אוטומטית לפני תור", detail: "להגדיר ב-GHL סדרת הודעות אוטומטית שנשלחת אחרי שלקוחה שילמה והזמינה תור:\n\n1. מיידי — אישור הזמנה: \"Thank you [Name]! Your Glow Treatment is confirmed for [date] at [time]. Address: 1095 Bird Ave, Suite 1, San Jose.\"\n2. 48 שעות לפני — חימום: \"[Name], your glow session is in 2 days! Here's what to expect: a relaxing 60-min experience tailored to your skin. Arrive 5 min early.\"\n3. 24 שעות לפני — תזכורת: \"See you tomorrow, [Name]! Your appointment is at [time]. Need to reschedule? Call us at (669) 212-0038 — up to 24h in advance at no cost.\"\n4. 2 שעות לפני — תזכורת אחרונה: \"[Name], we're getting ready for you! See you at [time] at 1095 Bird Ave, Suite 1. Free parking available.\"\n5. 15 דקות אחרי שעת התור (אם לא הגיעה) — \"Hi [Name], we missed you today! Would you like to reschedule? Reply YES and we'll find a new time for you.\"", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "1c", text: "כתיבת הודעות ומסרים שיווקיים למודל ה-Prepay", detail: "צריך להכין את כל הקופי לכל נקודת מגע עם הלקוחה:\n\n• מודעת פייסבוק: \"First Glow Treatment — $79 (Save $20!) Reserve your spot with a $20 priority deposit.\"\n• דף נחיתה: הסבר ברור על התהליך, ביקורות, תמונות before/after, וכפתור \"Reserve My Spot — $20\"\n• SMS ראשוני ללידים: \"Hi [Name]! Ready for your first Glow experience? Book now and save $20 — pay just $79 instead of $99. Reserve your spot → [link]\"\n• סקריפט טלפוני לצוות: \"הטיפול עולה $99, אבל יש לנו אופציית VIP — את משלמת $20 עכשיו להבטחת המקום ובהגעה משלמת רק $59. ככה את חוסכת $20 ומבטיחה לעצמך את המקום.\"", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "1d", text: "כתיבת מדיניות ביטולים ברורה לדף ההזמנה", detail: "צריך לנסח מדיניות ביטולים ברורה שתופיע בדף התשלום ובהודעת האישור:\n\n\"Priority Deposit Policy:\n• Your $20 deposit secures your appointment at the VIP price of $79 (regular $99).\n• Reschedule free of charge up to 24 hours before your appointment.\n• No-shows and cancellations under 24 hours: deposit is non-refundable.\n• Questions? Call us at (669) 212-0038.\"\n\nחשוב שהשפה תהיה חיובית ולא מאיימת — הלקוחה צריכה להרגיש שהיא מקבלת דיל, לא שהיא נענשת.", assignee: "david", done: false, notes: "", priority: "high" },
+            { id: "1e", text: "בניית תהליך אוטומטי ל-No Show במודל Prepay", detail: "ה-$20 ששולמו מראש הם המדיניות עצמה — אין צורך לרדוף אחרי לקוחות על דמי ביטול. אי אפשר לגבות כסף ממי שלא השאירה כרטיס אשראי.\n\nהתהליך ב-GHL:\n\n1. לקוחה שילמה $20 ולא הגיעה → סימון אוטומטי כ-No Show ב-pipeline\n2. ה-$20 נשאר אצלנו — רווח נקי, אפס עלות שירות\n3. 30 דקות אחרי שעת התור → SMS: \"Hi [Name], we missed you today! Your $20 deposit has been applied. Would you like to reschedule? We'll honor the $79 VIP price for you → [link]\"\n4. אם לא הגיבה תוך 48 שעות → SMS שני: \"[Name], just checking in — would you still like to rebook your Glow Treatment? Reply YES and we'll find a time that works.\"\n5. אם לא הגיבה תוך שבוע → העברה ל-Cold list\n\nלמה להציע reschedule? כי לקוחה שכבר שילמה $20 יש סיכוי גבוה שתגיע בפעם השנייה — וזו עוד הזדמנות למכור חבילה. ה-$20 כבר אצלנו בכל מקרה.\n\nחשוב: לקוחה שרוצה לשנות תאריך עד 24 שעות מראש — בחינם, בלי בעיה. אנחנו רוצים גמישות, לא עונש. המטרה היא שתגיע, לא שתפסיד כסף.", assignee: "david", done: false, notes: "", priority: "high" },
+            { id: "1f", text: "הכנת מתנת הגעה ללקוחות חדשות", detail: "להכין מתנת הפתעה קטנה שתחכה ללקוחות שמגיעות לפגישה הראשונה. המטרה: לחזק את ההרגשה שההגעה שווה, וליצור חוויה שהלקוחה תספר עליה לחברות.\n\nאפשרויות:\n• דוגמית קרם/סרום מהמותגים שאתם עובדים איתם (Murad, Shira)\n• מסכה קטנה לשימוש ביתי\n• שקית ממותגת של Willow Glow עם המתנה + כרטיס ביקור + קוד הפניה\n\nעלות משוערת: $3-5 ליחידה. ROI: אם זה גורם ל-5% יותר לקוחות לקנות חבילה, זה משתלם פי 10.", assignee: "owner", done: false, notes: "", priority: "normal" },
+          ]
+        },
+        {
+          name: "📞 תהליך מכירה",
+          tasks: [
+            { id: "2a", text: "בניית סקריפט מכירה ללידים חדשים", detail: "לכתוב סקריפט מפורט לכל שיחת טלפון/SMS עם ליד חדש. המבנה:\n\n1. פתיחה חמה: \"היי [שם], ראיתי שנרשמת לטיפול ב-Willow Glow! מה הדבר העיקרי שהיית רוצה לשפר בעור שלך?\"\n2. הקשבה + זיהוי הכאב (קמטים? אקנה? עור רפוי?)\n3. חיבור לפתרון: \"בדיוק בשביל זה יש לנו את ה-[טיפול רלוונטי]. הרבה לקוחות שלנו עם אותו הדבר ראו תוצאות כבר אחרי הטיפול הראשון.\"\n4. סגירה עם Prepay: \"הטיפול שלנו עולה $99, אבל יש לנו אופציית VIP — $79 עם הבטחת מקום. רוצה שאשריין לך?\"\n5. טיפול בהתנגדויות (\"יקר לי\", \"אני צריכה לחשוב\", \"מה זה כולל\")\n\nהסקריפט צריך להרגיש כמו שיחה טבעית, לא מכירה אגרסיבית.", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "2b", text: "הגדרת Pipeline לידים ב-GHL", detail: "לבנות צינור מכירות ב-GoHighLevel עם השלבים הבאים:\n\n1. Lead — ליד נכנס (מילא טופס / השאיר פרטים)\n2. Contacted — יצרנו קשר ראשוני (SMS/שיחה)\n3. Booked — קבע תור\n4. Paid $20 — שילם דמי תיעדוף\n5. Showed — הגיע לטיפול\n6. Sold — רכש חבילה/תוכנית\n7. Lost — לא רלוונטי (עם סיבה)\n\nלכל שלב להגדיר אוטומציות: כמה זמן ליד יכול להישאר בשלב לפני שנשלח follow-up, מתי להעביר למנהל, ומתי לוותר. זה יאפשר למדוד אחוזי המרה בכל שלב ולזהות איפה הלידים נופלים.", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "2c", text: "הגדרת SLA — תגובה תוך 5 דקות לכל ליד", detail: "מחקרים מראים שתגובה תוך 5 דקות מגדילה את הסיכוי לסגירה פי 10 לעומת תגובה אחרי 30 דקות.\n\nמה צריך:\n• אוטומציה ב-GHL: ליד חדש → SMS מיידי אוטומטי (\"תודה שפנית! אחד הצוות שלנו ייצור איתך קשר תוך דקות\")\n• התראה מיידית לנייד של מי שמטפל בלידים (push notification)\n• אם אין תגובה אנושית תוך 5 דקות → SMS שני אוטומטי עם לינק להזמנה עצמאית\n• מעקב: דוח שבועי של זמני תגובה ממוצעים", assignee: "owner", done: false, notes: "", priority: "critical" },
+            { id: "2d", text: "בניית תגובה אוטומטית ללידים חדשים", detail: "ליד שנרשם צריך לקבל מיידית (תוך שניות):\n\nSMS: \"Hi [Name]! Thank you for your interest in Willow Glow ✨ We'd love to help you find the perfect treatment. One of our skin specialists will reach out shortly. In the meantime, check out our results → [link to before/after page]\"\n\nEmail: הודעת ברוכה הבאה עם:\n• תודה על הפנייה\n• \"מה לצפות\" — תיאור קצר של החוויה\n• ביקורות של לקוחות\n• הצעת ה-$79 Prepay\n• לינק להזמנה\n\nזה חוסך זמן לצוות ושומר על הליד חם עד שמישהו מתקשר.", assignee: "david", done: false, notes: "", priority: "high" },
+            { id: "2e", text: "הכשרת הצוות על תהליך Upsell", detail: "להכין מפגש הדרכה לקוסמטיקאיות (Lynn, Terilyn, Emily) על תהליך המכירה בזמן הטיפול:\n\nהמודל:\n$79 טיפול ראשון → ייעוץ עור חינם עם הקוסמטיקאית → התאמת תוכנית טיפולים אישית → הצעת חבילה (~$200/חודש)\n\nנקודות מפתח:\n• לא למכור — לייעץ. \"בהתבסס על מה שאני רואה, הייתי ממליצה על...\"\n• להראות תמונות before/after של לקוחות דומות\n• להסביר את ההבדל בין טיפול חד-פעמי לתוכנית\n• להציע: \"רוצה שאכין לך תוכנית מותאמת אישית? בלי התחייבות\"\n• הקוסמטיקאית ממליצה → יועצת העור סוגרת את העסקה", assignee: "owner", done: false, notes: "", priority: "high" },
+            { id: "2f", text: "גיוס יוצרת תוכן שתסתובב בין הסניפים", detail: "זה אחד הצעדים הכי חשובים לטווח הארוך. $340/יום על מודעות בלי תוכן טרי = שריפת כסף. מודעות עם תוכן אותנטי מהשטח ממירות פי 2-3 יותר ממודעות עם תמונות סטוק.\n\nפרופיל התפקיד:\n• צעירה (20-30) עם יכולת צילום וידאו ותמונות בנייד\n• מכירה אינסטגרם, TikTok, Reels\n• עין לעיצוב, יודעת Canva / CapCut\n• עברית + אנגלית (לתוכן בשתי השפות)\n• לא חייבת להיות מקצועית — אותנטיות חשובה יותר מפרפקציה\n\nמה היא עושה:\n• מגיעה 3-4 פעמים בשבוע, מתחלפת בין San Jose ו-Milpitas\n• מצלמת הכל: טיפולים בזמן אמת, before/after, הקוסמטיקאיות בעבודה, תגובות לקוחות, האווירה בספא, מוצרים, הכנות\n• יוצרת Reels/TikToks קצרים (15-60 שניות)\n• מצלמת חומר גולמי למודעות פייסבוק/אינסטגרם\n• מכינה 10-15 פיסות תוכן בשבוע\n\nסוגי תוכן שצריך:\n• \"Day in the life\" בספא\n• צילום טיפול בזמן אמת (עם הסכמת לקוחה)\n• Before/After עם סיפור\n• הקוסמטיקאית מסבירה טיפ\n• Unboxing מוצר חדש\n• תגובת לקוחה אחרי טיפול (\"wow moment\")\n• סרטוני בדיקת גיל עור (מושלם למשפך ה-$29!)\n• סביבת הספא — נרות, מוזיקה, שלווה\n\nתקציב:\n• Part-time: $1,500-2,500/חודש (15-20 שעות/שבוע)\n• Freelancer: $300-500 ליום צילומים (2 ימים/שבוע = $2,400-4,000/חודש)\n• אפשרות חסכונית: סטודנטית לתקשורת/שיווק — $1,000-1,500/חודש\n\nROI: עם תקציב מודעות של $10K+/חודש, תוכן טרי ואותנטי הוא ההבדל בין CPL של $85 ל-CPL של $40. יוצרת תוכן שעולה $2K/חודש שמורידה CPL בחצי = חיסכון של $5K+/חודש על מודעות.\n\nאיפה למצוא:\n• קבוצות פייסבוק של יוצרי תוכן UGC באזור Bay Area\n• Craigslist / Indeed — \"Part-time Content Creator for Spa\"\n• אינסטגרם — לחפש יוצרות תוכן מקומיות באזור San Jose\n• SJSU (San Jose State) — סטודנטים לתקשורת חזותית", assignee: "owner", done: false, notes: "", priority: "critical" },
+          ]
+        },
+        {
+          name: "🌐 תיקונים מהירים — אתר ומוניטין",
+          tasks: [
+            { id: "3a", text: "תיקון שגיאת כתיב בדף הבית", detail: "בכותרת הראשית של האתר כתוב \"Quite Confidence\" במקום \"Quiet Confidence\". זו שגיאת כתיב שפוגעת באמינות. אוהד (מנהל האתר) צריך להיכנס ל-Elementor ולתקן את הטקסט בהירו הראשי.\n\nלוקח 30 שניות. השפעה גדולה על רושם ראשוני.", assignee: "owner", done: false, notes: "אוהד יתקן", priority: "critical" },
+            { id: "3b", text: "הוספת מחירים לאתר", detail: "תלונה חוזרת ב-Yelp: אנשים לא מוצאים מחירים באתר. גם אם האסטרטגיה היא להביא אותם ל-Prepay, צריך שקיפות מינימלית.\n\nהמלצה: להוסיף בדף השירותים:\n• \"Starting at $79 with Priority Booking\" (לטיפול ראשון)\n• \"Skin Care Programs from $200/month\" (לתוכניות)\n• \"Regular single treatments: $300-$350\"\n\nזה לא חושף הכל אבל נותן ללקוחה מספיק מידע להרגיש בנוח להתקדם.", assignee: "owner", done: false, notes: "", priority: "critical" },
+            { id: "3c", text: "מענה לתלונת BBB ושיפור דירוג D+", detail: "ל-Willow Glow יש דירוג D+ ב-Better Business Bureau בגלל תלונה אחת שלא נענתה. הלקוחה התלוננה על שינויי תורים ותקשורת לקויה.\n\nמה לעשות:\n1. להיכנס לחשבון BBB ולהגיב לתלונה בצורה מקצועית ואמפתית\n2. להציע פתרון (טיפול חינם / זיכוי)\n3. לבקש מ-BBB לעדכן את הדירוג אחרי המענה\n4. לשקול BBB Accreditation ($500/שנה) — נותן חותמת אמינות\n\nדירוג BBB מופיע בחיפושי גוגל ומשפיע על אמון.", assignee: "owner", done: false, notes: "", priority: "high" },
+            { id: "3d", text: "איחוד הצעות הכניסה — מעבר למודל Prepay", detail: "כרגע יש באתר שתי הצעות מתחרות: \"$89 First Glow\" ו-\"50% Off First Treatment\". זה מבלבל.\n\nצריך לאחד הכל למודל ה-Prepay החדש:\n• לשנות באתר: \"First Glow — $79 with Priority Booking (Save $20!)\"\n• להוריד את ה-50% off\n• לעדכן את כל המודעות בפייסבוק\n• לעדכן את הבאנר באתר\n\nמסר אחד, ברור, פשוט.", assignee: "david", done: false, notes: "", priority: "high" },
+            { id: "3e", text: "מענה מקצועי לביקורות שליליות ב-Yelp", detail: "יש כמה ביקורות שליליות ב-Yelp שמזכירות \"מכירת מוצרים שהם scam\". זה מזיק מאוד.\n\nגישה למענה:\n• לא להתגונן — להראות אמפתיה\n• \"We're sorry to hear about your experience. Client satisfaction is our top priority.\"\n• להציע פתרון: \"We'd love to make this right — please contact us directly at (669) 212-0038\"\n• להפריד בין שירות הטיפולים למכירת מוצרים — אולי לבחון מחדש את אסטרטגיית מכירת המוצרים\n\nחשוב: כל ביקורת חדשה (חיובית) דוחפת את השליליות למטה.", assignee: "owner", done: false, notes: "", priority: "high" },
+          ]
+        },
+        {
+          name: "🚀 הכנה להשקת ספא 2 — Milpitas",
+          tasks: [
+            { id: "4a", text: "בניית דף נחיתה ל-Milpitas עם מערכת Prepay", detail: "צריך להיות מוכן לפני 10 באפריל!\n\nדף הנחיתה צריך לכלול:\n• שם הספא החדש (הבעלים צריך להחליט — פועל תחת שם אחר)\n• כותרת: \"Grand Opening! First Treatment — $79 (Save $20)\"\n• טופס הזמנה עם תשלום $20\n• תמונות מקצועיות (אפשר להשתמש בתמונות מ-San Jose בינתיים)\n• ביקורות מ-San Jose (\"From our sister location\")\n• כתובת + מפה + שעות פעילות\n• טלפון ייעודי ל-Milpitas\n\nלחבר ל-GHL pipeline נפרד כדי לעקוב על Milpitas בנפרד.", assignee: "david", done: false, notes: "צריך להיות מוכן לפני 10/4", priority: "critical" },
+            { id: "4b", text: "הקמת Google Business Profile ל-Milpitas", detail: "פרופיל גוגל עסקי הוא חובה לפני ההשקה:\n\n1. ליצור פרופיל חדש בשם הספא החדש\n2. להוסיף: כתובת מדויקת, טלפון, שעות פעילות, אתר\n3. להעלות 10-15 תמונות מקצועיות\n4. לכתוב תיאור עסק מותאם ל-SEO מקומי\n5. להגדיר קטגוריות: Day Spa, Facial Spa, Skin Care Clinic\n6. להפעיל הודעות והזמנות דרך גוגל\n\nחשוב: אימות הכתובת לוקח 1-2 שבועות (גוגל שולח גלויה) — להתחיל מיד!", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "4c", text: "יצירת קמפיין פייסבוק/אינסטגרם לאזור Milpitas", detail: "קמפיין השקה ממוקד:\n\nTargeting:\n• רדיוס 10 מייל מ-Milpitas\n• נשים וגברים 35-65\n• תחומי עניין: skincare, wellness, anti-aging, facials\n• Lookalike audience מלקוחות San Jose (אם יש pixel data)\n\nמבנה:\n• Campaign 1: Grand Opening — \"Now open in Milpitas! First treatment $79\"\n• Campaign 2: Pain point — \"Tired of looking tired? Non-invasive solutions\"\n• Campaign 3: Social proof — Before/after + reviews מ-San Jose\n\nתקציב המלצה: $150-200/יום בשבועיים הראשונים, אז לאופטם.", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "4d", text: "הכנת חומרים גרפיים להשקה", detail: "חומרים שצריך:\n\n1. מודעות פייסבוק/אינסטגרם (3-4 וריאציות):\n   • תמונות מקצועיות של הספא/טיפולים\n   • וידאו קצר (15-30 שניות) אם אפשר\n   • קרוסלה עם שירותים עיקריים\n\n2. פוסטים אורגניים לאינסטגרם:\n   • \"Coming Soon to Milpitas\" (countdown)\n   • \"Grand Opening\" ביום הפתיחה\n   • \"Meet our team\"\n\n3. Story templates ממותגים\n4. Google Business Profile photos\n5. דף נחיתה banners", assignee: "david", done: false, notes: "", priority: "high" },
+            { id: "4e", text: "החלטה על שם המותג ל-Milpitas", detail: "הבעלים ציין שהספא השני יפעל תחת שם אחר. זו החלטה קריטית שמשפיעה על כל השיווק:\n\nשיקולים:\n• שם נפרד = מתחילים מאפס (SEO, reviews, brand recognition)\n• שם דומה (\"Glow Clinics Milpitas\") = מנצלים את המוניטין הקיים\n• \"By Willow Glow\" = דרך אמצע\n\nצריך להחליט לפני שבונים דף נחיתה, GBP, ודפי סושיאל. המלצה: לבחור שם עד סוף השבוע הראשון.", assignee: "owner", done: false, notes: "", priority: "critical" },
+          ]
+        },
+        {
+          name: "🔬 משפך $29 — בדיקת גיל עור",
+          tasks: [
+            { id: "13a", text: "בירור פרטי מכשיר בדיקת גיל העור + יכולות", detail: "לפני שבונים את המשפך, צריך לדעת בדיוק:\n\n• מה שם המכשיר? (VISIA? Observ? Skin Scanner אחר?)\n• מה בדיוק הוא מודד? (גיל עור, נזקי שמש, קמטים, נקבוביות, כתמים?)\n• האם יש פלט מודפס/דיגיטלי שאפשר לתת ללקוחה?\n• כמה זמן לוקחת בדיקה? (אם 15 דקות — אפשר 4 בשעה)\n• האם המכשיר בשני הסניפים או רק ב-San Jose?\n• האם אפשר לצלם את המסך/תוצאה לתוכן שיווקי?\n\nהמידע הזה קריטי לקופי של המודעות ולדף הנחיתה. ככל שהבדיקה נשמעת יותר מדעית/טכנולוגית, ככה ההצעה חזקה יותר.", assignee: "owner", done: false, notes: "", priority: "critical" },
+            { id: "13b", text: "בניית דף נחיתה ייעודי לבדיקת $29", detail: "דף נחיתה נפרד מדף ה-$79. המסר שונה לגמרי — פה מוכרים סקרנות, לא טיפול.\n\nמבנה הדף:\n\nכותרת: \"גלי את גיל העור האמיתי שלך — $29 בלבד\"\nתת-כותרת: \"בדיקה מקצועית עם [שם המכשיר] + קרם מתנה\"\n\n• הסבר קצר: \"המכשיר שלנו סורק את העור ומגלה את הגיל האמיתי שלו — שיכול להיות שונה מאוד מהגיל שלך. תוך 15 דקות תקבלי תמונה ברורה של מצב העור שלך.\"\n• 3 נקודות: \"מה תגלי?\" — גיל עור אמיתי, אזורי נזק, המלצות מותאמות\n• תמונה של המכשיר + תמונה של דוח לדוגמה\n• ביקורות: \"חשבתי שהעור שלי בסדר ואז גיליתי שגיל העור שלי 8 שנים מעליי. התחלתי תוכנית ובשלושה חודשים ירדתי 5 שנים!\"\n• כפתור: \"קבעי בדיקה — $29\" → תשלום $29 ב-Stripe\n• בונוס: \"+ קרם מתנה בשווי $XX מחכה לך בהגעה\"\n\nחשוב: דף נפרד עם URL ייעודי (glowclinics.com/skin-age) כדי לעקוב על המרות בנפרד.", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "13c", text: "כתיבת קופי למודעות פייסבוק — משפך $29", detail: "3-4 וריאציות של מודעות לטסט:\n\nמודעה 1 — סקרנות ישירה:\n\"How old is your skin REALLY? 🔬\nOur advanced skin scanner reveals your skin's true age in minutes.\nYou might be surprised.\n$29 includes professional analysis + free skincare gift.\nLimited spots → [Book Now]\"\n\nמודעה 2 — פחד + פתרון:\n\"Your skin might be aging faster than you think.\nOur [device name] technology scans below the surface to reveal sun damage, collagen loss, and your skin's real age.\nFind out in 15 minutes — just $29 + a free gift.\nBook your Skin Age Check → [link]\"\n\nמודעה 3 — Social proof:\n\"'I thought my skin was fine until the scan showed my skin age was 52. I'm 41.'\nDiscover YOUR skin's true age with our professional analysis.\n$29 + free skincare gift → [Book Now]\"\n\nמודעה 4 — וידאו:\nסרטון 15 שניות של הבדיקה בפעולה → תגובת הפתעה של לקוחה → הצגת התוצאה\n\nTargeting: נשים 35-65, רדיוס 15 מייל, תחומי עניין: anti-aging, skincare, wellness\nתקציב: $100-150/יום לטסט ראשוני", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "13d", text: "בניית תהליך תשלום $29 + אוטומציות ב-GHL", detail: "תהליך טכני:\n\n1. לקוחה לוחצת על המודעה → מגיעה לדף הנחיתה\n2. ממלאת פרטים + משלמת $29 ב-Stripe\n3. GHL מקבל את הליד ← tag: \"Skin Age Check\"\n4. Pipeline נפרד: Paid $29 → Reminded → Showed → Upsold / Not Yet\n5. סדרת SMS תזכורות (כמו ב-Prepay $20):\n   • מיידי: אישור + כתובת + \"מתנה מחכה לך!\"\n   • 48 שעות: \"מה לצפות בבדיקת גיל העור שלך\"\n   • 24 שעות: תזכורת\n   • 2 שעות: \"נתראה בקרוב!\"\n6. No-show → $29 נשאר אצלנו + SMS הצעה לקבוע מחדש\n\nחשוב: ה-$29 הוא pipeline נפרד מה-$79 Prepay. שני המשפכים רצים במקביל, לקהלים שונים.", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "13e", text: "בניית סקריפט Upsell לאחרי בדיקת גיל העור", detail: "זה הרגע הכי חשוב במשפך — הלקוחה יושבת עם התוצאות ביד.\n\nסקריפט לקוסמטיקאית/יועצת:\n\n1. הצגת התוצאות בצורה חיובית:\n\"אז בואי נסתכל ביחד על מה שהמכשיר מצא...\"\n\n2. הסבר הממצאים:\n\"הגיל שלך הוא [X], וגיל העור שלך יצא [Y]. מה שזה אומר הוא שיש פה אזורים שאפשר לשפר משמעותית — בעיקר באזור [הראי את האזור הבעייתי].\"\n\n3. הגשר למכירה (לא למכור — לייעץ):\n\"החדשות הטובות הן שזה בדיוק מה שאנחנו מתמחות בו. יש לנו לקוחות שהתחילו עם גיל עור דומה והורידו 5-8 שנים תוך 3 חודשים.\"\n\n4. ההצעה:\n\"רוצה שאראה לך מה תוכנית טיפולים מותאמת תיראה בשבילך? בלי שום התחייבות — רק שתראי מה האפשרויות.\"\n\n5. סגירה:\n\"התוכנית שלך תהיה [X] טיפולים + קרמים לבית, ב-$200 לחודש. רוצה להתחיל כבר בשבוע הבא?\"\n\nהנתונים מהמכשיר עושים 80% מהמכירה — הקוסמטיקאית רק צריכה לחבר את הנקודות. הלקוחה לא יכולה להתווכח עם מספר שהיא רואה על המסך.", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "13f", text: "הכנת מתנת קרם ללקוחות $29 + הזמנת מלאי", detail: "כל לקוחה שמגיעה לבדיקת $29 מקבלת קרם מתנה. זה עושה 3 דברים:\n\n1. מחזק את ההרגשה ש-$29 שווה כל שקל (\"קיבלתי גם בדיקה וגם מתנה\")\n2. נותן לה טעימה מהמוצרים — אם היא אוהבת, היא תקנה את הגרסה המלאה\n3. נותן לה סיבה לספר לחברות (word of mouth)\n\nאפשרויות:\n• דוגמית Murad / Shira (עלות: $2-4)\n• מסכה קטנה חד-פעמית (עלות: $1-3)\n• Mini serum / moisturizer (עלות: $3-5)\n\nההמלצה: לבחור מוצר שקשור לתוצאות הבדיקה. למשל, אם הבדיקה הראתה נזקי שמש — לתת דוגמית SPF/vitamin C. ככה המתנה מרגישה מותאמת אישית.\n\nלהזמין מלאי של 100 יחידות לפחות. עלות: $200-500. ROI: אם 20% מהן קונות חבילה של $200/חודש — זה $4,800/חודש הכנסה חוזרת.", assignee: "owner", done: false, notes: "", priority: "high" },
+          ]
+        }
+      ]
+    },
+    {
+      id: "phase2",
+      title: "שלב 2 — ימים 31-60",
+      subtitle: "בנה אמון + השקה — צמיחה",
+      color: "#E67E22",
+      categories: [
+        {
+          name: "⭐ מערכת אמון דיגיטלית",
+          tasks: [
+            { id: "5a", text: "השקת קמפיין ביקורות גוגל אוטומטי", detail: "להגדיר ב-GHL אוטומציה:\n\nתהליך: לקוחה סיימה טיפול → 2 שעות אחר כך מקבלת SMS:\n\"Hi [Name]! Thank you for visiting Willow Glow today ✨ We'd love to hear about your experience! It only takes 30 seconds → [Google Review Link]\"\n\nאם לא השאירה ביקורת תוך 48 שעות → תזכורת שנייה:\n\"[Name], your feedback means the world to us! Share your Glow experience → [link]\"\n\nיעד: 20 ביקורות חדשות בחודש. ביקורות גוגל משפיעות ישירות על SEO מקומי ועל אמון לקוחות חדשות.", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "5b", text: "מענה לכל הביקורות הקיימות בגוגל ו-Yelp", detail: "לעבור על כל הביקורות (גוגל + Yelp) ולהגיב לכל אחת:\n\nביקורות חיוביות: תודה אישית + הזכרת שם הקוסמטיקאית + \"נשמח לראות אותך שוב\"\nביקורות שליליות: אמפתיה + התנצלות + הצעת פתרון + \"צרי קשר ישירות\"\n\nכללים:\n• להגיב תוך 24-48 שעות מכל ביקורת חדשה\n• לא להתווכח\n• לא לחשוף פרטי לקוח\n• להראות שאכפת לכם\n\n113 ביקורות ב-Yelp + ביקורות גוגל — לוקח 2-3 שעות עבודה.", assignee: "owner", done: false, notes: "", priority: "high" },
+            { id: "5c", text: "יצירת 4 תכני Before/After לאינסטגרם", detail: "תמונות Before/After הן התוכן הכי אפקטיבי בתעשיית הספא:\n\n1. לבחור 4 לקוחות עם תוצאות דרמטיות (אקנה, קמטים, כתמים, עור רפוי)\n2. לקבל הסכמה בכתב (חתימה על טופס)\n3. לצלם באיכות גבוהה, תאורה אחידה, אותו זווית\n4. לכתוב caption שמספר את הסיפור: מה הבעיה הייתה, מה הטיפול, כמה זמן לקח\n\nפורמט: קרוסלה — תמונה 1 Before, תמונה 2 After, תמונה 3 הסבר הטיפול\n\nלפרסם אחד בשבוע. אפשר גם להשתמש כתוכן במודעות.", assignee: "owner", done: false, notes: "", priority: "high" },
+            { id: "5d", text: "צילום סרטוני \"הכירו את הצוות\" — Lynn, Terilyn, Emily", detail: "סרטונים קצרים (30-60 שניות) של כל קוסמטיקאית:\n\nמבנה:\n• \"היי, אני [שם], קוסמטיקאית מוסמכת ב-Willow Glow\"\n• \"אני מתמחה ב-[התמחות]\"\n• \"הדבר שאני הכי אוהבת בעבודה שלי הוא...\"\n• \"אם את מחפשת [פתרון], אני כאן בשבילך\"\n\nצילום: בחדר הטיפולים, תאורה טובה, לבוש מקצועי\nעריכה: כתוביות, לוגו, מוזיקה רקע\n\nהסרטונים האלה בונים אמון אישי — הלקוחה מרגישה שהיא כבר מכירה את מי שיטפל בה.", assignee: "owner", done: false, notes: "", priority: "high" },
+            { id: "5e", text: "הקמת לוח תוכן לאינסטגרם — מינימום 3 פוסטים בשבוע", detail: "לבנות תוכנית תוכן חודשית:\n\nיום שני: Educational — טיפ לטיפוח עור, הסבר על טכנולוגיה, מיתוס vs אמת\nיום רביעי: Social Proof — Before/After, ביקורת לקוחה, סיפור הצלחה\nיום שישי: Behind the scenes — הצוות, האווירה, מוצרים חדשים\n\nפורמטים לסירוגין: תמונה, קרוסלה, Reel, Story\n\nכלים: Canva לעיצוב, Later/Buffer לתזמון\n\nהאינסטגרם כרגע \"Basic, looks good and little active\" (לפי הבעלים) — צריך להפוך אותו למנוע תוכן פעיל.", assignee: "david", done: false, notes: "", priority: "high" },
+          ]
+        },
+        {
+          name: "📧 שיווק במייל ו-SMS",
+          tasks: [
+            { id: "6a", text: "בניית רשימת תפוצה מ-200 לקוחות פעילים", detail: "לייצא מ-GHL/Vagaro את כל הלקוחות הפעילים:\n• שם, אימייל, טלפון, תאריך טיפול אחרון, סוג טיפול\n• לסגמנט: לקוחות על חבילה, לקוחות חד-פעמיים, לקוחות שלא חזרו 60+ יום\n• לוודא שיש opt-in לשיווק (TCPA compliance לארה\"ב)\n• להעלות ל-GHL כרשימות מפולחות\n\nהרשימה הזו היא זהב — לקוחות שכבר מכירים ואוהבים אתכם.", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "6b", text: "בניית סדרת Welcome ללידים חדשים (5 מיילים)", detail: "סדרת אימיילים אוטומטית שנשלחת ללידים שנרשמו אבל עוד לא הזמינו:\n\nמייל 1 (מיידי): \"ברוכה הבאה! הנה מה שמחכה לך ב-Willow Glow\" — תיאור החוויה, תמונות\nמייל 2 (יום 2): \"הלקוחות שלנו מספרות\" — 3 ביקורות אמיתיות + תמונות before/after\nמייל 3 (יום 4): \"שאלות נפוצות\" — FAQ: כמה זמן? כואב? מתאים לעור שלי?\nמייל 4 (יום 7): \"ההצעה שלך עדיין מחכה\" — תזכורת ל-$79 Prepay + FOMO קל\nמייל 5 (יום 14): \"אחרונה — $79 במקום $99\" — הצעה אחרונה לפני שחוזרים למחיר רגיל\n\nכל מייל עם כפתור CTA ברור: \"Reserve My Spot — $79\"", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "6c", text: "בניית קמפיין החזרת לקוחות לא פעילים (60+ יום)", detail: "לקוחות שלא חזרו 60+ יום — יש להם סיבה. צריך לרענן את הקשר:\n\nSMS 1: \"Hi [Name]! We miss you at Willow Glow ✨ It's been a while — how's your skin been? We have something special for you → [link]\"\n\nהצעה: $30 הנחה על הטיפול הבא (לא חינם — שישלמו משהו)\n\nSMS 2 (אחרי שבוע): \"[Name], your $30 off is expiring soon! Book before [date] → [link]\"\n\nאם לא הגיבה: להוציא מהרשימה הפעילה, להעביר ל-\"Cold list\" שמקבלת רק ניוזלטר חודשי.", assignee: "david", done: false, notes: "", priority: "high" },
+            { id: "6d", text: "הקמת תבנית ניוזלטר חודשי", detail: "ניוזלטר חודשי לכל הרשימה:\n\nמבנה:\n• כותרת עונתית (\"Spring Glow Guide\", \"Summer Skin Tips\")\n• טיפ מקצועי אחד מהקוסמטיקאית\n• Before/After של החודש\n• הצעה מיוחדה למנויי הניוזלטר\n• לינק להזמנה\n\nעיצוב: פשוט, ממותג, מובייל-first\nתדירות: פעם בחודש (לא יותר — לא רוצים spam)\n\nמטרה: לשמור את Willow Glow ב-top of mind של הלקוחות.", assignee: "david", done: false, notes: "", priority: "normal" },
+          ]
+        },
+        {
+          name: "📊 אופטימיזציית מודעות",
+          tasks: [
+            { id: "7a", text: "אודיט מלא של כל קמפייני הפייסבוק", detail: "לשבת עם הגישה למנהל המודעות ולנתח:\n\n• כמה קמפיינים רצים? (הבעלים אמר \"many ads\")\n• מה ה-CPL של כל קמפיין?\n• איזה creative עובד הכי טוב? (תמונה vs וידאו, מסר A vs B)\n• מה ה-targeting של כל קמפיין?\n• איזה קמפיינים לכבות (CPL גבוה, conversion נמוך)?\n• איזה קמפיינים להגדיל תקציב?\n\nלבנות דוח מסודר עם המלצות: כבה/שנה/הגדל.\n\nעם $340/יום ($10K+/חודש) חייבים לוודא שכל דולר עובד.", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "7b", text: "הקמת מערכת A/B Testing", detail: "לכל קמפיין צריך לרוץ לפחות 2 וריאציות:\n\n• Creative A vs Creative B (תמונה שונה)\n• Copy A vs Copy B (מסר שונה)\n• Audience A vs Audience B (targeting שונה)\n\nכללים:\n• לתת לכל טסט לרוץ 5-7 ימים לפחות\n• מינימום 100 leads per variation לפני הכרעה\n• המנצח ממשיך, המפסיד נעצר, וריאציה חדשה עולה\n\nזה תהליך מתמשך — כל שבוע מנתחים ומשפרים.", assignee: "david", done: false, notes: "", priority: "high" },
+            { id: "7c", text: "השקת קמפיין Retargeting", detail: "אנשים שביקרו באתר ולא הזמינו — הקהל הכי חם שיש:\n\n1. להתקין Facebook Pixel באתר (אם לא מותקן)\n2. ליצור Custom Audience: מבקרי אתר ב-30 יום האחרונים שלא הזמינו\n3. להריץ מודעות retargeting:\n   • \"Still thinking about it? Your $79 Glow Treatment is waiting\"\n   • Social proof: ביקורות + before/after\n   • Urgency: \"Limited spots this week\"\n\nRetargeting עולה הרבה פחות מ-cold ads ומייצר ROI גבוה יותר.", assignee: "david", done: false, notes: "", priority: "high" },
+            { id: "7d", text: "ניתוח ביצועי מודל ה-Prepay — התאמות אם צריך", detail: "אחרי 30 יום של מודל ה-Prepay, לנתח:\n\n• כמה אחוז מהלידים הסכימו לשלם $20?\n• מה ה-show rate של מי ששילם vs מי שלא?\n• מה ה-conversion rate לחבילה של מי ששילם?\n• האם $20 הוא הסכום הנכון? (אולי $25? $15?)\n• האם הפריימינג עובד?\n\nלהכין דוח מפורט והמלצות: להמשיך / לשנות מחיר / לשנות מסר.", assignee: "david", done: false, notes: "", priority: "critical" },
+          ]
+        },
+        {
+          name: "🏪 Milpitas — חודש ראשון של פעילות",
+          tasks: [
+            { id: "8a", text: "הערכת פיילוט SkinPlus US ל-Milpitas", detail: "SkinPlus US מציעים:\n• $9/שעה VA × 12 שעות = $3,000/חודש\n• $30 לכל show (לקוח שמגיע בפועל)\n• הדרכה על המערכת שלהם\n\nמה לבדוק:\n• איכות הלידים שהם מביאים — האם מתאימים לקהל היעד?\n• מה ה-show rate שלהם?\n• מה ה-conversion rate לחבילה?\n• האם ה-VA מספיק טוב בשיחות?\n\nהמלצה: להריץ פיילוט של חודש ב-Milpitas בלבד. לא לתת להם את San Jose עד שמוכיחים ROI. לעקוב על כל מספר.", assignee: "david", done: false, notes: "", priority: "high" },
+            { id: "8b", text: "יצירת שיתופי פעולה מקומיים ב-Milpitas", detail: "שותפויות עם עסקים משלימים באזור:\n\n• חדרי כושר/יוגה — להשאיר פליירים, להציע הנחה הדדית\n• סלוני שיער — referral הדדי (שיער + עור = חבילה מושלמת)\n• חנויות אורגניות/בריאות — קהל יעד דומה\n• רופאי עור — referral למי שמחפש פתרון לא פולשני\n\nלהכין: כרטיסי ביקור, פליירים, הצעת שיתוף פעולה ברורה (\"הלקוחות שלך מקבלים 15% הנחה\")", assignee: "owner", done: false, notes: "", priority: "high" },
+            { id: "8c", text: "מעקב KPIs נפרד ל-Milpitas", detail: "חובה להפריד את המספרים של Milpitas מ-San Jose:\n\nב-GHL: pipeline נפרד, tags נפרדים, דוחות נפרדים\n\nKPIs למעקב שבועי:\n• מספר לידים\n• CPL\n• Show rate\n• המרה לחבילה\n• הכנסה\n• ROI פרסום\n\nזה מאפשר להבין מה עובד/לא עובד בכל סניף בנפרד ולהקצות תקציב חכם.", assignee: "david", done: false, notes: "", priority: "critical" },
+          ]
+        }
+      ]
+    },
+    {
+      id: "phase3",
+      title: "שלב 3 — ימים 61-90",
+      subtitle: "תרחיב — סקייל",
+      color: "#27AE60",
+      categories: [
+        {
+          name: "👥 צוות ותפעול",
+          tasks: [
+            { id: "9a", text: "הגדרת תפקיד מנהל תפעול + תיאור תפקיד", detail: "הבעלים ציין שזה קריטי: \"We need to develop our operation manager character.\"\n\nתיאור תפקיד:\n• ניהול שוטף של שני הסניפים\n• ניהול צוות הקוסמטיקאיות\n• מעקב על KPIs יומי/שבועי\n• טיפול בתלונות ובעיות\n• סנכרון מול השיווק (לוודא שהלידים מטופלים)\n• ניהול מלאי מוצרים\n• דיווח שבועי לבעלים\n\nפרופיל: ניסיון ניהולי, רצוי מתעשיית הספא/ביוטי, אנגלית מצוינת, יכולת לעבוד עם מערכות (GHL, Vagaro)", assignee: "david", done: false, notes: "הבעלים ציין שזה קריטי", priority: "critical" },
+            { id: "9b", text: "גיוס/הכשרת אנשי מכירות או VAs", detail: "הבעלים ציין: \"Find a way to have many salespeople.\"\n\nאפשרויות:\n1. VA (Virtual Assistant) מחו\"ל — $5-9/שעה, מטפל בלידים בטלפון/SMS\n2. Inside sales בארה\"ב — $15-20/שעה + עמלה\n3. SkinPlus US — כבר מציעים VA ב-$9/שעה\n\nהמלצה: להתחיל עם VA אחד ל-San Jose ואחד ל-Milpitas. SLA ברור: תגובה תוך 5 דקות, follow-up לפי סקריפט, דיווח יומי.\n\nהכשרה: סקריפט מכירה + ידע על השירותים + גישה ל-GHL", assignee: "owner", done: false, notes: "", priority: "critical" },
+            { id: "9c", text: "בניית Playbook מכירות", detail: "מסמך מקיף שכל איש מכירות/VA חדש יכול ללמוד ממנו תוך יום:\n\n1. מי אנחנו — Willow Glow בקצרה\n2. השירותים שלנו — תיאור קצר + מחיר + למי מתאים\n3. קהל היעד — מי הלקוח האידיאלי\n4. הכאב של הלקוח — מה מביא אותם אלינו\n5. המבדל שלנו — למה אנחנו ולא המתחרים\n6. תהליך המכירה — step by step מליד ועד סגירה\n7. סקריפטים — לטלפון, SMS, וואטסאפ\n8. טיפול בהתנגדויות — 10 ההתנגדויות הנפוצות + תשובות\n9. מערכת GHL — איך להשתמש\n10. KPIs — מה מצופה מכל איש מכירות\n\nזה ה-DNA של מכונת המכירות.", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "9d", text: "בניית דשבורד KPI לסקירה שבועית", detail: "דשבורד שמראה בזמן אמת:\n\n• לידים השבוע (כל סניף בנפרד)\n• Show rate\n• המרות לחבילה\n• הכנסה שבועית/חודשית\n• CPL ממוצע\n• ROI פרסום\n• ביקורות חדשות\n• זמן תגובה ממוצע\n\nאפשרויות: דשבורד ב-GHL, Google Sheets אוטומטי, או כלי כמו Databox.\n\nלהשתמש בכל פגישה שבועית כבסיס לדיון.", assignee: "david", done: false, notes: "", priority: "high" },
+          ]
+        },
+        {
+          name: "📈 הגדלת הכנסות",
+          tasks: [
+            { id: "10a", text: "השקת תוכנית הפניות (Referral Program)", detail: "תוכנית פשוטה ואפקטיבית:\n\n\"הביאי חברה — שתיכן מקבלות 50% הנחה!\"\n\nמכניקה:\n• כל לקוחה מקבלת קוד הפניה אישי\n• כשחברה שלה מזמינה עם הקוד — שתיהן מקבלות 50% הנחה על הטיפול הבא\n• מעקב ב-GHL — tag לכל referral\n\nמתי להציע:\n• אחרי טיפול מוצלח (הלקוחה במצב רוח מעולה)\n• ב-SMS 24 שעות אחרי טיפול\n• בכרטיס ביקור שניתן בסוף הטיפול\n\nReferral leads הם הלידים הכי איכותיים — show rate גבוה, conversion גבוה.", assignee: "david", done: false, notes: "", priority: "high" },
+            { id: "10b", text: "בחינת השקת Google Ads", detail: "פייסבוק מביא awareness, גוגל מביא intent. מי שמחפשת \"facial near me\" או \"best spa san jose\" מוכנה לקנות.\n\nלבדוק:\n• מחקר מילות מפתח: \"facial san jose\", \"hydrafacial near me\", \"anti aging facial\"\n• CPC ממוצע באזור (צפי: $5-15 per click)\n• Landing page מותאם לגוגל (לא דף הבית — דף ספציפי)\n\nתקציב התחלתי: $500-1,000/חודש לטסט\n\nזה ערוץ חדש שישלים את הפייסבוק. רוב המתחרים כנראה כבר שם.", assignee: "david", done: false, notes: "", priority: "high" },
+            { id: "10c", text: "הכפלת תקציב על קמפיינים מנצחים", detail: "אחרי 60 יום של A/B testing יהיו לנו נתונים ברורים:\n\n• איזה creative מביא הכי הרבה לידים?\n• איזה audience הכי רווחי?\n• איזה מסר ממיר הכי טוב?\n\nלקחת את ה-top 2-3 קמפיינים ולהכפיל עליהם תקציב.\nלכבות את כל מה שלא עובד.\n\nכלל אצבע: אם קמפיין מביא ROI חיובי — אין סיבה לא להגדיל. תקציב ללא הגבלה (כמו שהבעלים אמר) אומר שהשמיים הם הגבול, כל עוד ה-ROI חיובי.", assignee: "david", done: false, notes: "", priority: "high" },
+            { id: "10d", text: "הרחבת רדיוס targeting לשני הסניפים", detail: "אחרי שהסניפים יציבים, להרחיב:\n\n• San Jose: מ-Willow Glen לכל San Jose, Campbell, Los Gatos, Cupertino\n• Milpitas: ל-Fremont, Santa Clara, north San Jose\n\nלבדוק אם ה-CPL עולה כשמרחיבים — אם כן, לחזור לרדיוס צר יותר.\nLookalike audiences מלקוחות קיימים יעזרו להגיע לאנשים דומים באזורים חדשים.", assignee: "david", done: false, notes: "", priority: "normal" },
+          ]
+        },
+        {
+          name: "🔄 החלטה לגבי SkinPlus US",
+          tasks: [
+            { id: "11a", text: "סקירת תוצאות פיילוט SkinPlus ב-Milpitas", detail: "אחרי חודש של פיילוט, לנתח:\n\n• כמה לידים הביאו?\n• מה ה-show rate?\n• מה איכות הלידים? (האם קנו חבילות?)\n• מה העלות הכוללת? ($3K VA + $30 × shows)\n• מה ה-ROI בהשוואה לקמפיינים שלנו?\n\nלבנות טבלת השוואה: SkinPlus vs In-house\n\nאם ROI חיובי — לשקול הרחבה. אם לא — לסיים.", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "11b", text: "החלטה: להרחיב SkinPlus ל-San Jose או להישאר in-house", detail: "על סמך תוצאות הפיילוט, ישיבת החלטה עם הבעלים:\n\nתרחיש A — SkinPlus עובד טוב:\n• להרחיב ל-San Jose\n• לנהל שניהם במקביל (in-house + SkinPlus)\n• לא להסתמך רק עליהם — תמיד לשמור על ערוצים עצמאיים\n\nתרחיש B — SkinPlus לא מספק:\n• לסיים את ההתקשרות\n• להשקיע את ה-$3K/חודש בגיוס VA ישירות\n• להשתמש בלמידה מהפיילוט לשיפור התהליך הפנימי\n\nהמפתח: נתונים, לא רגשות.", assignee: "owner", done: false, notes: "", priority: "critical" },
+            { id: "11c", text: "משא ומתן על תנאים אם מרחיבים", detail: "אם מחליטים להמשיך עם SkinPlus:\n\n• לבקש הנחת נפח — $25/show במקום $30 (שני סניפים)\n• לבקש commitment על show rate מינימלי\n• לדרוש שקיפות מלאה — גישה לדוחות הלידים\n• חוזה עם exit clause — אפשר לצאת עם התראה של 30 יום\n• SLA ברור על איכות הלידים\n\nאל תקבלו את ההצעה הראשונה — תמיד יש מקום למו\"מ.", assignee: "david", done: false, notes: "", priority: "normal" },
+          ]
+        },
+        {
+          name: "🎯 סקירת 90 יום + תכנון המשך",
+          tasks: [
+            { id: "12a", text: "סקירת KPIs מלאה ל-90 יום", detail: "ישיבת סיכום מקיפה:\n\nלבדוק כל KPI לעומת היעד:\n• Show rate: 35% → יעד 60%\n• מחזור חודשי: $200K → יעד $500K\n• לידים חודשי SJ: 120 → יעד 150\n• לידים חודשי Milpitas: 0 → יעד 80\n• המרה לחבילה: 30% → יעד 40%\n• ביקורות גוגל: +60 חדשות\n• זמן תגובה לליד: 5 דקות\n\nלזהות: מה עבר את היעד? מה לא הגיע? למה? מה לשנות?", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "12b", text: "בניית אסטרטגיה לימים 91-180", detail: "על סמך מה שלמדנו ב-90 הימים הראשונים:\n\n• מה הערוצים הרווחיים ביותר? → להגדיל\n• מה לא עבד? → לכבות או לשנות\n• אילו שירותים חדשים להוסיף?\n• האם יש מקום לסניף שלישי?\n• האם המבנה הארגוני תומך בצמיחה?\n\nלבנות תוכנית 30-60-90 חדשה לפאזה הבאה.", assignee: "david", done: false, notes: "", priority: "critical" },
+            { id: "12c", text: "תיעוד מה עבד / מה לא — Playbook לעתיד", detail: "לתעד את כל הלמידה:\n\n• איזה סוג מודעה עבד הכי טוב?\n• מה המסר שהמיר הכי הרבה?\n• מה ה-targeting שעבד?\n• מה ה-show rate הסופי ואיך הגענו אליו?\n• מה ה-Sales script שעבד?\n• טעויות שעשינו ולקחים\n\nהמסמך הזה שווה זהב — כשפותחים סניף חדש, יש Playbook מוכן.", assignee: "david", done: false, notes: "", priority: "high" },
+          ]
+        }
+      ]
+    }
+  ],
+  weeklyNotes: []
+};
+
+const priorityStyles = {
+  critical: { bg: "#FDE8E8", text: "#C0392B", label: "קריטי" },
+  high: { bg: "#FFF3E0", text: "#E67E22", label: "גבוה" },
+  normal: { bg: "#E8F5E9", text: "#27AE60", label: "רגיל" },
+};
+
+function StrategyTracker() {
+  const [data, setData] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [activePhase, setActivePhase] = React.useState("phase1");
+  const [filter, setFilter] = React.useState("all");
+  const [editingNote, setEditingNote] = React.useState(null);
+  const [noteText, setNoteText] = React.useState("");
+  const [showWeeklyModal, setShowWeeklyModal] = React.useState(false);
+  const [weeklyInput, setWeeklyInput] = React.useState("");
+  const [expandedCats, setExpandedCats] = React.useState({});
+  const [expandedTasks, setExpandedTasks] = React.useState({});
+
+  React.useEffect(() => { loadData(); }, []);
+
+  const loadData = async () => {
+    try {
+      const res = await fetch("/api/data");
+      const result = await res.json();
+      if (result && result.phases) { setData(result); }
+      else { setData(initialData); await fetch("/api/data", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(initialData) }); }
+    } catch { setData(initialData); }
+    setLoading(false);
+  };
+
+  const saveData = async (newData) => {
+    setData(newData);
+    try { await fetch("/api/data", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(newData) }); } catch (e) { console.error(e); }
+  };
+
+  const toggleTask = (phaseId, catIdx, taskId) => {
+    const newData = JSON.parse(JSON.stringify(data));
+    const phase = newData.phases.find(p => p.id === phaseId);
+    const task = phase.categories[catIdx].tasks.find(t => t.id === taskId);
+    task.done = !task.done;
+    if (task.done) task.completedDate = new Date().toLocaleDateString("he-IL");
+    else delete task.completedDate;
+    saveData(newData);
+  };
+
+  const saveNote = (phaseId, catIdx, taskId) => {
+    const newData = JSON.parse(JSON.stringify(data));
+    const phase = newData.phases.find(p => p.id === phaseId);
+    const task = phase.categories[catIdx].tasks.find(t => t.id === taskId);
+    task.notes = noteText;
+    saveData(newData);
+    setEditingNote(null); setNoteText("");
+  };
+
+  const addWeeklyNote = () => {
+    if (!weeklyInput.trim()) return;
+    const newData = JSON.parse(JSON.stringify(data));
+    newData.weeklyNotes.unshift({ date: new Date().toLocaleDateString("he-IL"), text: weeklyInput.trim() });
+    saveData(newData);
+    setWeeklyInput(""); setShowWeeklyModal(false);
+  };
+
+  const resetAll = async () => {
+    if (confirm("לאפס את כל הנתונים? פעולה זו בלתי הפיכה.")) {
+      await saveData(initialData);
+      setActivePhase("phase1");
+      setExpandedTasks({});
+    }
+  };
+
+  const toggleCat = (key) => setExpandedCats(prev => ({ ...prev, [key]: !prev[key] }));
+  const toggleExpand = (id) => setExpandedTasks(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const moveTask = (phaseId, catIdx, taskId, direction) => {
+    const newData = JSON.parse(JSON.stringify(data));
+    const phase = newData.phases.find(p => p.id === phaseId);
+    const tasks = phase.categories[catIdx].tasks;
+    const idx = tasks.findIndex(t => t.id === taskId);
+    if (direction === "up" && idx > 0) {
+      [tasks[idx - 1], tasks[idx]] = [tasks[idx], tasks[idx - 1]];
+    } else if (direction === "down" && idx < tasks.length - 1) {
+      [tasks[idx], tasks[idx + 1]] = [tasks[idx + 1], tasks[idx]];
+    } else { return; }
+    saveData(newData);
+  };
+
+  const moveCat = (phaseId, catIdx, direction) => {
+    const newData = JSON.parse(JSON.stringify(data));
+    const phase = newData.phases.find(p => p.id === phaseId);
+    const cats = phase.categories;
+    if (direction === "up" && catIdx > 0) {
+      [cats[catIdx - 1], cats[catIdx]] = [cats[catIdx], cats[catIdx - 1]];
+    } else if (direction === "down" && catIdx < cats.length - 1) {
+      [cats[catIdx], cats[catIdx + 1]] = [cats[catIdx + 1], cats[catIdx]];
+    } else { return; }
+    saveData(newData);
+  };
+
+  const filterTasks = (tasks) => {
+    if (filter === "all") return tasks;
+    if (filter === "todo") return tasks.filter(t => !t.done);
+    if (filter === "done") return tasks.filter(t => t.done);
+    if (filter === "david") return tasks.filter(t => t.assignee === "david");
+    if (filter === "owner") return tasks.filter(t => t.assignee === "owner");
+    if (filter === "critical") return tasks.filter(t => t.priority === "critical");
+    return tasks;
+  };
+
+  if (loading) return (
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#F8FAFC", direction: "rtl" }}>
+      <div style={{ textAlign: "center" }}><div style={{ fontSize: 32, marginBottom: 12 }}>✨</div><div style={{ color: "#64748B", fontSize: 14 }}>טוען אסטרטגיה...</div></div>
+    </div>
+  );
+  if (!data) return null;
+
+  const phase = data.phases.find(p => p.id === activePhase);
+  const allTasks = phase.categories.flatMap(c => c.tasks);
+  const doneTasks = allTasks.filter(t => t.done);
+  const progress = allTasks.length ? Math.round((doneTasks.length / allTasks.length) * 100) : 0;
+  const totalAll = data.phases.flatMap(p => p.categories.flatMap(c => c.tasks));
+  const totalDone = totalAll.filter(t => t.done);
+  const totalProgress = totalAll.length ? Math.round((totalDone.length / totalAll.length) * 100) : 0;
+
+  return (
+    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", background: "#F8FAFC", minHeight: "100vh", direction: "rtl" }}>
+      {/* Header */}
+      <div style={{ background: "linear-gradient(135deg, #1B2A4A 0%, #2E75B6 100%)", padding: "24px 20px 20px", color: "white" }}>
+        <div style={{ maxWidth: 800, margin: "0 auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+            <div>
+              <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Willow Glow</h1>
+              <div style={{ fontSize: 13, opacity: 0.8, marginTop: 2 }}>אסטרטגיית שיווק 30-60-90 יום</div>
+              <div style={{ fontSize: 10, opacity: 0.6, marginTop: 4, background: "rgba(255,255,255,0.15)", display: "inline-block", padding: "2px 10px", borderRadius: 10 }}>🔗 מסמך משותף — כל שינוי נשמר ונראה לכל המשתתפים</div>
+            </div>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: 28, fontWeight: 800 }}>{totalProgress}%</div>
+              <div style={{ fontSize: 11, opacity: 0.7 }}>{totalDone.length}/{totalAll.length} משימות</div>
+            </div>
+          </div>
+          <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 8, height: 6, overflow: "hidden" }}>
+            <div style={{ background: "white", height: "100%", width: `${totalProgress}%`, borderRadius: 8, transition: "width 0.5s ease" }} />
+          </div>
+        </div>
+      </div>
+
+      {/* Phase Tabs */}
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "12px 20px 0" }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+          {data.phases.map(p => {
+            const pt = p.categories.flatMap(c => c.tasks);
+            const pd = pt.filter(t => t.done).length;
+            const pp = pt.length ? Math.round((pd / pt.length) * 100) : 0;
+            const isA = p.id === activePhase;
+            return (
+              <button key={p.id} onClick={() => setActivePhase(p.id)} style={{
+                flex: 1, padding: "10px 6px", border: isA ? `2px solid ${p.color}` : "2px solid #E2E8F0",
+                borderRadius: 10, background: isA ? `${p.color}10` : "white", cursor: "pointer", transition: "all 0.2s"
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: p.color }}>{p.title.split("—")[0].trim()}</div>
+                <div style={{ fontSize: 10, color: "#64748B", marginTop: 2 }}>{pd}/{pt.length} בוצע</div>
+                <div style={{ background: "#E2E8F0", borderRadius: 4, height: 3, marginTop: 4, overflow: "hidden" }}>
+                  <div style={{ background: p.color, height: "100%", width: `${pp}%`, borderRadius: 4 }} />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Phase Header */}
+        <div style={{ background: "white", borderRadius: 12, padding: "16px 18px", marginBottom: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: 17, color: "#1B2A4A" }}>{phase.title}</h2>
+              <div style={{ fontSize: 13, color: phase.color, fontWeight: 600, marginTop: 2 }}>{phase.subtitle}</div>
+            </div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: phase.color }}>{progress}%</div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div style={{ display: "flex", gap: 4, marginBottom: 12, flexWrap: "wrap" }}>
+          {[
+            { key: "all", label: "הכל" }, { key: "todo", label: "לביצוע" }, { key: "done", label: "בוצע ✓" },
+            { key: "critical", label: "🔴 קריטי" }, { key: "david", label: "👤 דויד" }, { key: "owner", label: "🏢 בעלים" }
+          ].map(f => (
+            <button key={f.key} onClick={() => setFilter(f.key)} style={{
+              padding: "5px 12px", borderRadius: 20, border: "1px solid #E2E8F0", fontSize: 11, fontWeight: 500,
+              background: filter === f.key ? "#1B2A4A" : "white", color: filter === f.key ? "white" : "#64748B",
+              cursor: "pointer", transition: "all 0.15s"
+            }}>{f.label}</button>
+          ))}
+        </div>
+
+        {/* Categories & Tasks */}
+        {phase.categories.map((cat, catIdx) => {
+          const filtered = filterTasks(cat.tasks);
+          if (filtered.length === 0) return null;
+          const catDone = cat.tasks.filter(t => t.done).length;
+          const catKey = `${phase.id}-${catIdx}`;
+          const isExp = expandedCats[catKey] !== false;
+          return (
+            <div key={catIdx} style={{ marginBottom: 10, background: "white", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+              <div style={{
+                padding: "12px 18px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center",
+                borderBottom: isExp ? "1px solid #F1F5F9" : "none"
+              }}>
+                <div onClick={() => toggleCat(catKey)} style={{ fontSize: 14, fontWeight: 700, color: "#1B2A4A", flex: 1 }}>{cat.name}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <button onClick={(e) => { e.stopPropagation(); moveCat(phase.id, catIdx, "up"); }} style={{
+                    background: "none", border: "1px solid #E2E8F0", borderRadius: 4, cursor: "pointer", padding: "2px 5px",
+                    fontSize: 10, color: "#94A3B8", lineHeight: 1
+                  }} title="הזז למעלה">▲</button>
+                  <button onClick={(e) => { e.stopPropagation(); moveCat(phase.id, catIdx, "down"); }} style={{
+                    background: "none", border: "1px solid #E2E8F0", borderRadius: 4, cursor: "pointer", padding: "2px 5px",
+                    fontSize: 10, color: "#94A3B8", lineHeight: 1
+                  }} title="הזז למטה">▼</button>
+                  <span style={{ fontSize: 11, color: "#94A3B8", fontWeight: 500, marginRight: 4, marginLeft: 4 }}>{catDone}/{cat.tasks.length}</span>
+                  <span onClick={() => toggleCat(catKey)} style={{ fontSize: 12, color: "#94A3B8", transform: isExp ? "rotate(180deg)" : "none", transition: "transform 0.2s", cursor: "pointer" }}>▼</span>
+                </div>
+              </div>
+              {isExp && filtered.map(task => {
+                const ps = priorityStyles[task.priority];
+                const isEditing = editingNote === task.id;
+                const isTaskExp = expandedTasks[task.id];
+                return (
+                  <div key={task.id} style={{ borderBottom: "1px solid #F8FAFC", background: task.done ? "#FAFFFE" : "white" }}>
+                    <div style={{ padding: "10px 18px" }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0, flexShrink: 0, marginTop: 1 }}>
+                          <div onClick={() => toggleTask(phase.id, catIdx, task.id)} style={{
+                            width: 22, height: 22, borderRadius: 6, border: task.done ? "2px solid #27AE60" : "2px solid #CBD5E1",
+                            background: task.done ? "#27AE60" : "white", cursor: "pointer",
+                            display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s"
+                          }}>
+                            {task.done && <span style={{ color: "white", fontSize: 13, fontWeight: 700 }}>✓</span>}
+                          </div>
+                          <div style={{ display: "flex", gap: 1, marginTop: 4 }}>
+                            <button onClick={() => moveTask(phase.id, catIdx, task.id, "up")} style={{
+                              background: "none", border: "1px solid #E2E8F0", borderRadius: 3, cursor: "pointer",
+                              padding: "0px 3px", fontSize: 8, color: "#CBD5E1", lineHeight: "14px"
+                            }} title="הזז למעלה">▲</button>
+                            <button onClick={() => moveTask(phase.id, catIdx, task.id, "down")} style={{
+                              background: "none", border: "1px solid #E2E8F0", borderRadius: 3, cursor: "pointer",
+                              padding: "0px 3px", fontSize: 8, color: "#CBD5E1", lineHeight: "14px"
+                            }} title="הזז למטה">▼</button>
+                          </div>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div onClick={() => toggleExpand(task.id)} style={{
+                            fontSize: 13, color: task.done ? "#94A3B8" : "#1E293B",
+                            textDecoration: task.done ? "line-through" : "none", lineHeight: 1.5, cursor: "pointer",
+                            display: "flex", justifyContent: "space-between", alignItems: "center"
+                          }}>
+                            <span>{task.text}</span>
+                            <span style={{ fontSize: 10, color: "#CBD5E1", marginRight: 8, flexShrink: 0, transform: isTaskExp ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▾</span>
+                          </div>
+                          <div style={{ display: "flex", gap: 6, marginTop: 5, alignItems: "center", flexWrap: "wrap" }}>
+                            <span style={{ fontSize: 10, padding: "1px 8px", borderRadius: 10, fontWeight: 600, background: ps.bg, color: ps.text }}>{ps.label}</span>
+                            <span style={{
+                              fontSize: 10, padding: "1px 8px", borderRadius: 10, fontWeight: 500,
+                              background: task.assignee === "david" ? "#EBF5FF" : "#FFF7ED",
+                              color: task.assignee === "david" ? "#2E75B6" : "#C2410C"
+                            }}>{task.assignee === "david" ? "דויד" : "בעלים"}</span>
+                            {task.completedDate && <span style={{ fontSize: 10, color: "#94A3B8" }}>✓ {task.completedDate}</span>}
+                            <button onClick={() => { setEditingNote(isEditing ? null : task.id); setNoteText(task.notes || ""); }} style={{
+                              fontSize: 10, color: "#94A3B8", background: "none", border: "none", cursor: "pointer", padding: 0
+                            }}>{task.notes ? "📝 ערוך הערה" : "+ הערה"}</button>
+                          </div>
+
+                          {/* Expanded detail */}
+                          {isTaskExp && (
+                            <div style={{
+                              marginTop: 8, padding: "12px 14px", background: "#F8FAFC", borderRadius: 8,
+                              borderRight: `3px solid ${phase.color}`, fontSize: 12.5, color: "#334155", lineHeight: 1.8, whiteSpace: "pre-wrap"
+                            }}>
+                              {task.detail}
+                            </div>
+                          )}
+
+                          {task.notes && !isEditing && !isTaskExp && (
+                            <div style={{ fontSize: 11, color: "#64748B", background: "#FFFBEB", padding: "5px 10px", borderRadius: 6, marginTop: 5, borderRight: "3px solid #F59E0B" }}>
+                              {task.notes}
+                            </div>
+                          )}
+                          {task.notes && isTaskExp && (
+                            <div style={{ fontSize: 11, color: "#64748B", background: "#FFFBEB", padding: "5px 10px", borderRadius: 6, marginTop: 5, borderRight: "3px solid #F59E0B" }}>
+                              הערה: {task.notes}
+                            </div>
+                          )}
+                          {isEditing && (
+                            <div style={{ marginTop: 6, display: "flex", gap: 6 }}>
+                              <input value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="הוסף הערה..."
+                                autoFocus style={{ flex: 1, fontSize: 12, padding: "5px 10px", border: "1px solid #E2E8F0", borderRadius: 6, outline: "none", direction: "rtl" }}
+                                onKeyDown={e => e.key === "Enter" && saveNote(phase.id, catIdx, task.id)} />
+                              <button onClick={() => saveNote(phase.id, catIdx, task.id)} style={{
+                                fontSize: 11, padding: "5px 12px", background: "#2E75B6", color: "white", border: "none", borderRadius: 6, cursor: "pointer"
+                              }}>שמור</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+
+        {/* Weekly Notes */}
+        <div style={{ background: "white", borderRadius: 12, padding: "16px 18px", marginTop: 10, marginBottom: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <h3 style={{ margin: 0, fontSize: 14, color: "#1B2A4A" }}>📋 סיכומי פגישות שבועיות</h3>
+            <button onClick={() => setShowWeeklyModal(!showWeeklyModal)} style={{
+              fontSize: 11, padding: "4px 14px", background: "#1B2A4A", color: "white", border: "none", borderRadius: 8, cursor: "pointer"
+            }}>+ הוסף סיכום</button>
+          </div>
+          {showWeeklyModal && (
+            <div style={{ marginBottom: 10 }}>
+              <textarea value={weeklyInput} onChange={e => setWeeklyInput(e.target.value)}
+                placeholder="סיכום פגישה, החלטות, פעולות נדרשות..."
+                style={{ width: "100%", fontSize: 12, padding: 10, border: "1px solid #E2E8F0", borderRadius: 8, minHeight: 70, outline: "none", resize: "vertical", boxSizing: "border-box", direction: "rtl" }} />
+              <button onClick={addWeeklyNote} style={{
+                fontSize: 11, padding: "5px 16px", background: "#2E75B6", color: "white", border: "none", borderRadius: 6, cursor: "pointer", marginTop: 6
+              }}>שמור סיכום</button>
+            </div>
+          )}
+          {data.weeklyNotes.length === 0 && !showWeeklyModal && (
+            <div style={{ fontSize: 12, color: "#94A3B8", textAlign: "center", padding: 10 }}>אין סיכומי פגישות עדיין</div>
+          )}
+          {data.weeklyNotes.map((note, i) => (
+            <div key={i} style={{ padding: "8px 12px", background: "#F8FAFC", borderRadius: 8, marginBottom: 6, borderRight: "3px solid #2E75B6" }}>
+              <div style={{ fontSize: 10, color: "#94A3B8", marginBottom: 3, fontWeight: 600 }}>{note.date}</div>
+              <div style={{ fontSize: 12, color: "#334155", whiteSpace: "pre-wrap" }}>{note.text}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* KPIs */}
+        <div style={{ background: "white", borderRadius: 12, padding: "16px 18px", marginBottom: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          <h3 style={{ margin: "0 0 12px 0", fontSize: 14, color: "#1B2A4A" }}>📊 יעדי KPI</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {[
+              { label: "Show Rate", current: "35%", target: "60%", color: "#C0392B" },
+              { label: "מחזור חודשי", current: "$200K", target: "$500K", color: "#2E75B6" },
+              { label: "המרה לחבילה", current: "30%", target: "40%", color: "#E67E22" },
+              { label: "ביקורות גוגל", current: "~50", target: "+60", color: "#27AE60" },
+              { label: "לידים SJ", current: "120", target: "150", color: "#8E44AD" },
+              { label: "לידים Milpitas", current: "0", target: "80", color: "#16A085" },
+            ].map((kpi, i) => (
+              <div key={i} style={{ padding: "10px 12px", background: "#F8FAFC", borderRadius: 8, borderRight: `3px solid ${kpi.color}` }}>
+                <div style={{ fontSize: 10, color: "#94A3B8", fontWeight: 600 }}>{kpi.label}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 3 }}>
+                  <span style={{ fontSize: 16, fontWeight: 800, color: "#1E293B" }}>{kpi.current}</span>
+                  <span style={{ fontSize: 11, color: kpi.color, fontWeight: 600 }}>← {kpi.target}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ textAlign: "center", padding: "12px 0 24px" }}>
+          <div style={{ fontSize: 11, color: "#CBD5E1", marginBottom: 8 }}>Willow Glow × Frequency-Based Marketing</div>
+          <button onClick={resetAll} style={{ fontSize: 10, color: "#E2E8F0", background: "none", border: "none", cursor: "pointer" }}>איפוס נתונים</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(StrategyTracker));
+  </script>
+</body>
+</html>
